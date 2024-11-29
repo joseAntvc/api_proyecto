@@ -3,7 +3,7 @@ const Product = require('../models/Product');
 
 const fetchAll = async (req, res) =>{
     try {
-        const products = await Product.find().populate("categories");
+        const products = await Product.find().populate("category");
         res.send(products);
     } catch (err) {
         res.status(500).send('Error retrieving products: ' + err.message);
@@ -13,7 +13,7 @@ const fetchAll = async (req, res) =>{
 const fetchById = async (req, res) => {
   try {
       const productId = req.params.productId;
-      const product = await Product.findById(productId).populate("categories");
+      const product = await Product.findById(productId).populate("category");
       if (!product) {
           return res.status(404).send('Product not found');
       }
@@ -26,7 +26,7 @@ const fetchById = async (req, res) => {
 const fetchByCategory = async (req, res) => {
   try {
       const categoryId = req.params.categoryId;
-      const products = await Product.find({ categories: categoryId }).populate("categories");
+      const products = await Product.find({ category: categoryId }).populate("category");
       if (products.length === 0) {
           return res.status(404).send('No products found for this category');
       }
@@ -45,7 +45,7 @@ const fetchByUser = async (req, res) => {
           .populate({
               path: 'products.product_id',
               populate: {
-                  path: 'categories',
+                  path: 'category',
               },
           });
       
