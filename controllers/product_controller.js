@@ -1,8 +1,13 @@
-const UserSales = require('../models/UserSales'); 
 const Product = require('../models/Product');
+const UserSales = require('../models/UserSales');
+const AWS = require('aws-sdk');
+
+const s3 = new AWS.S3({ region: 'us-east-1' });
+const bucketName = 'tedw21031011';
 
 const fetchAll = async (req, res) =>{
     try {
+        console.log('Fetching all');
         const products = await Product.find().populate("category");
         res.send(products);
     } catch (err) {
@@ -61,32 +66,52 @@ const fetchByUser = async (req, res) => {
 
 
 const create = async (req, res) => {
-  try {
-    const product = new Product(req.body);
-    await product.save();
+    try {
+        const userId = req.body.userId;
+        const file = req.file; // Obteniendo archivo desde Multer
+        let imageUrl = null;
+        let user = req.params.user; 
 
-    const userId = req.body.userId;
-    let userSales = await UserSales.findOne({ user: userId });
+        if (file) {
+            // Subir imagen a S3
+            const key = `proyecto/${userId}_${file.originalname}`;
+            const params = {
+                Bucket: bucketName,
+                Key: key,
+                Body: file.buffer,
+                ContentType: file.mimetype,
+            };
 
-    if (!userSales) {
-      userSales = new UserSales({
-        user: userId,
-        products: []
-      });
+            await s3.upload(params).promise();
+            imageUrl = `https://${bucketName}.s3.amazonaws.com/${key}`;
+        }
+
+        // Crear el producto
+        const product = new Product({
+            ...req.body,
+            images: imageUrl ? [imageUrl] : [] // Agregar URL de la imagen al producto
+        });
+
+        await product.save();
+
+        
+        let userSales = await UserSales.findOne({ user: userId });
+
+        if (!userSales) {
+            userSales = new UserSales({ user: userId, products: [] });
+        }
+
+        userSales.products.push({
+            product_id: product._id,
+        });
+
+        await userSales.save();
+
+        res.status(201).json({ product, userSales });
+    } catch (err) {
+        console.error('Error al crear el producto:', err);
+        res.status(400).send('Error al crear el producto: ' + err.message);
     }
-
-    userSales.products.push({
-      product_id: product._id,
-      quantity: req.body.quantity || 1,
-      price: req.body.price || product.price
-    });
-
-    await userSales.save();
-
-    res.send({ product, userSales });
-  } catch (err) {
-    res.status(400).send('Error saving product and updating user sales: ' + err.message);
-  }
 };
 
 const update = async (req, res) => {
