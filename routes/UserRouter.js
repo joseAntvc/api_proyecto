@@ -1,4 +1,5 @@
 const { User } = require('../models/User');
+const user_controller = require("../controllers/user_controller");
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -18,14 +19,9 @@ router.get(`/`, async (req, res) => {
     res.send(userList);
 })
 
-router.get('/:id', async (req, res) => {
-    const user = await User.findById(req.params.id).select('-passwordHash');
-
-    if (!user) {
-        res.status(500).json({ message: 'The user with the given ID was not found.' })
-    }
-    res.status(200).send(user);
-})
+router.route('/profile/:id')
+    .get(user_controller.getUserProfile)
+    .put(user_controller.updateUserProfile);
 
 router.post('/', async (req, res) => {
     let user = new User({
@@ -37,35 +33,6 @@ router.post('/', async (req, res) => {
         password: bcrypt.hashSync(req.body.password, 10)
     })
     user = await user.save();
-
-    if (!user)
-        return res.status(400).send('The user cannot be created!')
-
-    res.send(user);
-})
-
-router.put('/:id', async (req, res) => {
-
-    const userExist = await User.findById(req.params.id);
-    let newPassword
-    if (req.body.password) {
-        newPassword = bcrypt.hashSync(req.body.password, 10)
-    } else {
-        newPassword = userExist.passwordHash;
-    }
-
-    const user = await User.findByIdAndUpdate(
-        req.params.id,
-        {
-            name: req.body.name,
-            last_name: req.body.last_name,
-            username: req.body.username,
-            phone: req.body.phone,
-            email: req.body.email,
-            password: bcrypt.hashSync(req.body.password, 10)
-        },
-        { new: true }
-    )
 
     if (!user)
         return res.status(400).send('The user cannot be created!')

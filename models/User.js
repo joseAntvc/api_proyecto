@@ -10,8 +10,8 @@ const userSchema = new Schema({
   phone: String,
   email: { type: String, unique: true },
   password: String,
-  addresses: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
-  billings: [{ type: Schema.Types.ObjectId, ref: 'Billing' }]
+  addresses: { type: Schema.Types.ObjectId, ref: 'Address' },
+  billings: { type: Schema.Types.ObjectId, ref: 'Billing' }
 }, { collection: 'users' });
 
 userSchema.virtual("id").get(function () {
@@ -21,6 +21,5 @@ userSchema.virtual("id").get(function () {
 userSchema.set("toJSON", {
   virtuals: true,
 });
-
-exports.User = mongoose.model("User", userSchema);
-exports.userSchema = userSchema;
+const User = mongoose.model("User", userSchema);
+module.exports = { User };
