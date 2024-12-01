@@ -7,7 +7,7 @@ router.route("/")
   .get(product_controller.fetchAll)
   .post(s3Controller.upload.single('image'), product_controller.create);
 
-router.route("/:userId")
+router.route("/user/:userId")
   .get(product_controller.fetchByUser)
 
 router.route("/category/:categoryId")
@@ -19,5 +19,11 @@ router.route("/detail/:productId")
 router.route("/:id")
   .put(product_controller.update)
   .delete(product_controller.remove);
+
+router.route('/search')
+  .get(product_controller.fetchByName);
+
+router.route("/category/:categoryId/search")
+.get(product_controller.fetchByName);
 
 module.exports = router;
