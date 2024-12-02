@@ -23,6 +23,10 @@ router.route('/profile/:id')
     .get(user_controller.getUserProfile)
     .put(user_controller.updateUserProfile);
 
+router.route('/addresses/:userId')
+    .get(user_controller.getDirections)
+    .post(user_controller.addDirections);
+
 router.post('/', async (req, res) => {
     let user = new User({
         name: req.body.name,
