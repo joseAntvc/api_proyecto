@@ -135,24 +135,65 @@ const create = async (req, res) => {
 };
 
 const update = async (req, res) => {
+    console.log(req.body.userId)
     try {
-        const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!product) return res.status(404).send('The product with the given ID was not found.');
+        const userId = req.body.userId;
+        const file = req.file; // Obteniendo archivo desde Multer
+        let imageUrl = null;
+
+        if (file) {
+            // Subir imagen a S3
+            const key = `proyecto/${userId}_${file.originalname}`;
+            const params = {
+                Bucket: bucketName,
+                Key: key,
+                Body: file.buffer,
+                ContentType: file.mimetype,
+            };
+
+            await s3.upload(params).promise();
+            imageUrl = `https://${bucketName}.s3.amazonaws.com/${key}`;
+        }
+
+        // Actualizar el producto
+        const updatedData = {
+            ...req.body,
+            ...(imageUrl && { images: [imageUrl] }), // Agregar la nueva URL de la imagen si existe
+        };
+
+        const product = await Product.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+
+        if (!product) {
+            return res.status(404).send('The product with the given ID was not found.');
+        }
+
         res.send(product);
     } catch (err) {
-        res.status(400).send('Error updating product: ' + err.message);
+        console.error('Error al actualizar el producto:', err);
+        res.status(400).send('Error al actualizar el producto: ' + err.message);
     }
 };
 
+
 const remove = async (req, res) => {
     try {
-        const product = await Product.findByIdAndDelete(req.params.id);
-        if (!product) return res.status(404).send('The product with the given ID was not found.');
-        res.send({ message: 'Product deleted successfully' });
+      // Eliminar el producto de la colección de productos
+      const product = await Product.findByIdAndDelete(req.params.id);
+      if (!product) return res.status(404).send('The product with the given ID was not found.');
+  
+      // Eliminar todas las referencias de este producto en la colección usersales
+      await UserSales.updateMany(
+        { "products.product_id": req.params.id },
+        { $pull: { products: { product_id: req.params.id } } }
+      );
+  
+      res.send({ message: 'Product deleted successfully, references removed from UserSales.' });
     } catch (err) {
-        res.status(500).send('Error deleting product: ' + err.message);
+      res.status(500).send('Error deleting product: ' + err.message);
     }
-};
+  };
+  
+  
 
 
 module.exports = {fetchAll, fetchById, create, update, remove, fetchByUser, fetchByCategory, fetchByName }

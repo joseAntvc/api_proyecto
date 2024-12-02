@@ -16,8 +16,10 @@ router.route("/category/:categoryId")
 router.route("/detail/:productId")
   .get(product_controller.fetchById)
 
-router.route("/:id")
-  .put(product_controller.update)
+router.route("/update/:id")
+  .put(s3Controller.upload.single('image'), product_controller.update);
+
+router.route("/delete/:id")
   .delete(product_controller.remove);
 
 router.route('/search')
