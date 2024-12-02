@@ -109,4 +109,48 @@ const getDirections = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile, updateUserProfile, addDirections, getDirections };
+const deleteAddress = async (req, res) => {
+  try {
+    const { userId, addressId } = req.params;
+
+    console.log("userId recibido:", userId);
+    console.log("addressId recibido:", addressId);
+
+    // Buscar al usuario para verificar si existe
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error("Usuario no encontrado:", userId);
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Verificar si el ID de la dirección existe en el array del usuario
+    const addressIndex = user.addresses.indexOf(addressId);
+    if (addressIndex === -1) {
+      console.error("La dirección no está asociada a este usuario:", addressId);
+      return res.status(404).json({ message: "La dirección no está asociada a este usuario" });
+    }
+
+    // Eliminar el ID de la dirección del array `addresses` del usuario
+    user.addresses.splice(addressIndex, 1);
+    await user.save();
+
+    // Eliminar la dirección de la colección `Address`
+    const deletedAddress = await Address.findByIdAndDelete(addressId);
+    if (!deletedAddress) {
+      console.error("Dirección no encontrada en la colección Address:", addressId);
+      return res.status(404).json({ message: "Dirección no encontrada en la colección Address" });
+    }
+
+    res.status(200).json({
+      message: "Dirección eliminada correctamente",
+      user,
+      deletedAddress,
+    });
+  } catch (error) {
+    console.error("Error en el servidor:", error);
+    res.status(500).json({ message: "Error en el servidor", error });
+  }
+};
+
+
+module.exports = { getUserProfile, updateUserProfile, addDirections, getDirections, deleteAddress };
