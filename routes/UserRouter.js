@@ -57,7 +57,7 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1d' }
         )
 
-        res.status(200).send({ user: user.username, token: token })
+        res.status(200).send({ id: user.id, user: user.username, token: token })
     } else {
         res.status(400).send('Contraseña incorrecta!');
     }
@@ -97,7 +97,7 @@ router.post('/register', async (req, res) => {
         secret,
         { expiresIn: '1d' }
     )
-    res.status(200).send({ user: user.username, token: token })
+    res.status(200).send({ id: user.id, user: user.username, token: token })
 })
 
 
