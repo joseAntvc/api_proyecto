@@ -29,7 +29,6 @@ router.route('/addresses/:userId')
 
 router.route('/addresses/:userId/:addressId').delete(user_controller.deleteAddress);
 
-
 router.post('/', async (req, res) => {
     let user = new User({
         name: req.body.name,

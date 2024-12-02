@@ -22,37 +22,46 @@ const getUserProfile = async (req, res) => {
 // Controlador para actualizar el perfil de usuario
 const updateUserProfile = async (req, res) => {
   try {
+    // Verifica si el usuario existe
     const userExist = await User.findById(req.params.id);
     if (!userExist) {
-        return res.status(404).json({ message: 'The user with the given ID was not found.' });
+      return res.status(404).json({ message: 'The user with the given ID was not found.' });
     }
 
-    let newPassword = userExist.passwordHash;
-    if (req.body.password) {
-        newPassword = bcrypt.hashSync(req.body.password, 10);
+    // Si el usuario desea actualizar su contraseña, encripta la nueva
+    let updatedPassword = userExist.passwordHash; // Mantén la contraseña actual por defecto
+    if (req.body.password && req.body.password.trim() !== '') {
+      updatedPassword = bcrypt.hashSync(req.body.password, 10);
     }
 
+    // Construye el objeto con los datos a actualizar
     const updatedData = {
-        name: req.body.name,
-        last_name: req.body.last_name,
-        username: req.body.username,
-        phone: req.body.phone,
-        email: req.body.email,
-        password: newPassword,
+      name: req.body.name || userExist.name, // Usa el valor actual si no se proporciona uno nuevo
+      last_name: req.body.last_name || userExist.last_name,
+      username: req.body.username || userExist.username,
+      phone: req.body.phone || userExist.phone,
+      email: req.body.email || userExist.email,
+      password: updatedPassword, // Asegúrate de guardar el hash en el campo correcto
     };
 
+    // Actualiza el usuario en la base de datos
     const user = await User.findByIdAndUpdate(req.params.id, updatedData, { new: true });
 
     if (!user) {
-        return res.status(400).json({ message: 'The user cannot be updated!' });
+      return res.status(400).json({ message: 'The user cannot be updated!' });
     }
 
-    res.status(200).send(user);
+    // Responde con los datos actualizados
+    res.status(200).json({
+      message: 'User profile updated successfully.',
+      user,
+    });
   } catch (error) {
-      console.error('Error updating user:', error.message);
-      res.status(500).json({ message: 'An error occurred while updating the user.' });
+    console.error('Error updating user:', error.message);
+    res.status(500).json({ message: 'An error occurred while updating the user.' });
   }
 };
+
 
 //Direcciones
 const addDirections = async (req, res) => {
@@ -151,6 +160,8 @@ const deleteAddress = async (req, res) => {
     res.status(500).json({ message: "Error en el servidor", error });
   }
 };
+
+
 
 
 module.exports = { getUserProfile, updateUserProfile, addDirections, getDirections, deleteAddress };
