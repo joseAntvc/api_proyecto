@@ -10,8 +10,8 @@ const userSchema = new Schema({
   phone: String,
   email: { type: String, unique: true },
   password: String,
-  addresses: { type: Schema.Types.ObjectId, ref: 'Address' },
-  billings: { type: Schema.Types.ObjectId, ref: 'Billing' }
+  addresses: [{ type: Schema.Types.ObjectId, ref: 'Address' }],
+  billings: [{ type: Schema.Types.ObjectId, ref: 'Billing' }]
 }, { collection: 'users' });
 
 userSchema.virtual("id").get(function () {

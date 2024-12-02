@@ -23,6 +23,10 @@ router.route('/profile/:id')
     .get(user_controller.getUserProfile)
     .put(user_controller.updateUserProfile);
 
+router.route('/addresses/:userId')
+    .get(user_controller.getDirections)
+    .post(user_controller.addDirections);
+
 router.post('/', async (req, res) => {
     let user = new User({
         name: req.body.name,
@@ -57,7 +61,7 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1d' }
         )
 
-        res.status(200).send({ user: user.username, token: token })
+        res.status(200).send({ id: user.id, user: user.username, token: token })
     } else {
         res.status(400).send('Contraseña incorrecta!');
     }
@@ -97,7 +101,7 @@ router.post('/register', async (req, res) => {
         secret,
         { expiresIn: '1d' }
     )
-    res.status(200).send({ user: user.username, token: token })
+    res.status(200).send({ id: user.id, user: user.username, token: token })
 })
 
 
