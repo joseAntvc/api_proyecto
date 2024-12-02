@@ -24,6 +24,7 @@ router.route('/search')
   .get(product_controller.fetchByName);
 
 router.route("/category/:categoryId/search")
-.get(product_controller.fetchByName);
+  .get(product_controller.fetchByName);
+
 
 module.exports = router;
