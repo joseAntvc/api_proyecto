@@ -5,8 +5,10 @@ const mongoose = require("mongoose");
 const multer = require("multer");  // Para manejar uploads de imágenes
 const product_routes = require('./routes/product_route');
 const category_routes = require('./routes/category_route');
+const coupon_routes = require("./routes/coupon_route");
 const userRouter = require('./routes/UserRouter');
 const cartRoute = require('./routes/cart_route');
+const orderRoutes = require('./routes/order_route');
 
 const api_prefix = process.env.API_PREFIX;
 const app = express();
@@ -26,8 +28,10 @@ async function main() {
     console.log("Connected to the database");
 
     app.use(`${api_prefix}/products`, product_routes);  // Rutas de productos
+    app.use(`${api_prefix}/orders`, orderRoutes);
     app.use(`${api_prefix}/categories`, category_routes);
     app.use(`${api_prefix}/users`, userRouter);
+    app.use(`${api_prefix}/coupon`, coupon_routes);
     app.use(`${api_prefix}/cart`, cartRoute);
 
     app.listen(port, () => {

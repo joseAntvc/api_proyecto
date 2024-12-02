@@ -7,7 +7,6 @@ const bucketName = 'tedw21031011';
 
 const fetchAll = async (req, res) =>{
     try {
-        console.log('Fetching all');
         const products = await Product.find().populate("category");
         res.send(products);
     } catch (err) {
@@ -40,8 +39,29 @@ const fetchByCategory = async (req, res) => {
       res.status(500).send('Error retrieving products by category: ' + err.message);
   }
 };
-  
 
+const fetchByName = async (req, res) => {
+    try {
+        const productName = req.query.name;
+        const categoryId = req.params.categoryId; 
+        const query = {
+            name: { $regex: productName, $options: 'i' }, // Insensible a mayúsculas y minúsculas
+        };
+
+        if (categoryId) {
+            query.category = categoryId;
+        }
+
+        const products = await Product.find(query).populate("category");
+
+        if (products.length === 0) {
+            return res.status(404).send('No se encontraron productos con ese nombre.');
+        }
+        res.send(products);
+    } catch (err) {
+        res.status(500).send('Error al buscar productos por nombre: ' + err.message);
+    }
+};
 
 const fetchByUser = async (req, res) => {
   try {
@@ -134,4 +154,5 @@ const remove = async (req, res) => {
     }
 };
 
-module.exports = {fetchAll, fetchById, create, update, remove, fetchByUser, fetchByCategory }
+
+module.exports = {fetchAll, fetchById, create, update, remove, fetchByUser, fetchByCategory, fetchByName }
