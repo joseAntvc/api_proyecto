@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 const getUserOrders = async (req, res) => {
     try {
@@ -21,15 +22,15 @@ const getUserOrders = async (req, res) => {
             date: order.date,
             total_amount: order.items.reduce((sum, item) => sum + item.quantity * parseFloat(item.product.price), 0), // Calcular total
             items: order.items.map(item => ({
-                product_name: item.product.name,
-                description: item.product.description,
-                price: parseFloat(item.product.price).toFixed(2), // Usar precio del producto actual
+                product_name: item.product?.name || "Producto no disponible",
+                description: item.product?.description || "Sin descripción",
+                price: item.product?.price ? parseFloat(item.product.price).toFixed(2) : "0.00", // Usar precio del producto actual
                 quantity: item.quantity,
-                subtotal: (item.quantity * parseFloat(item.product.price)).toFixed(2) // Calcular subtotal
+                subtotal: item.product?.price ? (item.quantity * parseFloat(item.product.price)).toFixed(2) : "0.00" // Calcular subtotal
             })),
-            shipping_address: order.shipping_address,
-            billing_address: order.billing_address,
-            payment_status: order.payment.status
+            shipping_address: order.shipping_address || { street: "-", city: "-", state: "-", zip: "-" },
+            billing_address: order.billing_address || { street: "-", city: "-", state: "-", zip: "-" },
+            payment_status: order.payment?.status || "Sin información de pago"
         }));
 
         res.status(200).json(formattedOrders);
@@ -39,4 +40,29 @@ const getUserOrders = async (req, res) => {
     }
 };
 
-module.exports = { getUserOrders };
+
+const createOrder = async (req, res) => {
+    try {
+        const { items } = req.body;
+
+        for (let item of items) {
+            const product = await Product.findById(item.product);
+
+            if (product.stock < item.quantity) {
+                return res.status(400).send(`No hay suficiente stock para el producto: ${product.name}`);
+            }
+            product.stock -= item.quantity; //Se descuenta del stock
+
+            await product.save(); //Guarda el producto
+        }
+        const order = new Order(req.body);
+        await order.save();
+        res.status(200).send(order);
+    } catch (error) {
+        console.error("Error creating order:", error);
+        res.status(500).send("Error al procesar la orden.");
+    }
+};
+
+
+module.exports = { getUserOrders, createOrder };
