@@ -90,7 +90,7 @@ const create = async (req, res) => {
         const userId = req.body.userId;
         const file = req.file; // Obteniendo archivo desde Multer
         let imageUrl = null;
-        let user = req.params.user; 
+
 
         if (file) {
             // Subir imagen a S3
