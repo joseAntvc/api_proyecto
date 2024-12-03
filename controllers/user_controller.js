@@ -1,5 +1,6 @@
 const  { User }  = require('../models/User');
 const Address = require('../models/Address'); // Asegúrate de que la ruta sea correcta
+const Payment = require('../models/Payment');
 
 // Controlador para obtener el perfil de usuario por su ID
 const getUserProfile = async (req, res) => {
@@ -162,6 +163,15 @@ const deleteAddress = async (req, res) => {
 };
 
 
+const getPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find();
+    res.send(payments);
+} catch (err) {
+    res.status(500).send('Error retrieving categories: ' + err.message);
+}
+};
 
 
-module.exports = { getUserProfile, updateUserProfile, addDirections, getDirections, deleteAddress };
+
+module.exports = { getUserProfile, updateUserProfile, addDirections, getDirections, deleteAddress, getPayments };

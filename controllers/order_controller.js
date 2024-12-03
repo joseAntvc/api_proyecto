@@ -11,6 +11,7 @@ const getUserOrders = async (req, res) => {
             .populate('shipping_address', 'street city state zip')
             .populate('billing_address', 'street city state zip')
             .populate('payment', 'method status')
+            .populate('coupons', 'code percentage')
             .exec();
 
         if (!orders.length) {
@@ -20,14 +21,15 @@ const getUserOrders = async (req, res) => {
         // Formatear las órdenes
         const formattedOrders = orders.map(order => ({
             date: order.date,
-            total_amount: order.items.reduce((sum, item) => sum + item.quantity * parseFloat(item.product.price), 0), // Calcular total
+            total_amount: order.items.reduce((sum, item) => sum + item.quantity * item.product.price, 0), // Calcular total
             items: order.items.map(item => ({
                 product_name: item.product?.name || "Producto no disponible",
                 description: item.product?.description || "Sin descripción",
-                price: item.product?.price ? parseFloat(item.product.price).toFixed(2) : "0.00", // Usar precio del producto actual
+                price: item.product?.price ? (item.product.price).toLocaleString() : "0.00", // Usar precio del producto actual
                 quantity: item.quantity,
-                subtotal: item.product?.price ? (item.quantity * parseFloat(item.product.price)).toFixed(2) : "0.00" // Calcular subtotal
+                subtotal: item.product?.price ? (item.quantity * (item.product.price)).toLocaleString() : "0.00" // Calcular subtotal
             })),
+            coupons: order.coupons ? order.coupons.percentage : null,
             shipping_address: order.shipping_address || { street: "-", city: "-", state: "-", zip: "-" },
             billing_address: order.billing_address || { street: "-", city: "-", state: "-", zip: "-" },
             payment_status: order.payment?.status || "Sin información de pago"

@@ -18,7 +18,7 @@ const orderSchema = new Schema({
       price: mongoose.Types.Decimal128
     }],
     total_amount: mongoose.Types.Decimal128,
-    coupons: [{ type: Schema.Types.ObjectId, ref: 'Coupon' }],
+    coupons: { type: Schema.Types.ObjectId, ref: 'Coupon' },
     payment: { type: Schema.Types.ObjectId, ref: 'Payment' }
 }, { collection: 'order' });
 
