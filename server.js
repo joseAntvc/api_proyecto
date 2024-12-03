@@ -9,6 +9,7 @@ const coupon_routes = require("./routes/coupon_route");
 const userRouter = require('./routes/UserRouter');
 const cartRoute = require('./routes/cart_route');
 const orderRoutes = require('./routes/order_route');
+const reportsRoute = require('./routes/report_route');
 
 const api_prefix = process.env.API_PREFIX;
 const app = express();
@@ -33,6 +34,8 @@ async function main() {
     app.use(`${api_prefix}/users`, userRouter);
     app.use(`${api_prefix}/coupon`, coupon_routes);
     app.use(`${api_prefix}/cart`, cartRoute);
+    app.use(`${api_prefix}/reports`, reportsRoute);
+    
 
     app.listen(port, () => {
         console.log(`listening on port ${port}`);

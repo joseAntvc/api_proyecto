@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 
 const getUserOrders = async (req, res) => {
@@ -44,27 +45,41 @@ const getUserOrders = async (req, res) => {
 
 
 const createOrder = async (req, res) => {
+    const session = await mongoose.startSession();  // Iniciar sesión para la transacción
+    session.startTransaction();  // Iniciar la transacción
+
     try {
         const { items } = req.body;
-
         for (let item of items) {
-            const product = await Product.findById(item.product);
+            const product = await Product.findById(item.product).session(session);
+
+            if (!product) {
+                return res.status(400).send(`Producto no encontrado: ${item.product}`);
+            }
 
             if (product.stock < item.quantity) {
                 return res.status(400).send(`No hay suficiente stock para el producto: ${product.name}`);
             }
-            product.stock -= item.quantity; //Se descuenta del stock
-
-            await product.save(); //Guarda el producto
+            product.stock -= item.quantity; // Se descuenta del stock
+            await product.save({ session }); // Guardar el producto con la sesión para la transacción
         }
+
         const order = new Order(req.body);
-        await order.save();
-        res.status(200).send(order);
+        await order.save({ session }); // Guardar la orden dentro de la sesión de la transacción
+
+        // Confirmar la transacción
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(200).send(order); 
+
     } catch (error) {
-        console.error("Error creating order:", error);
+        await session.abortTransaction();
+        session.endSession();
         res.status(500).send("Error al procesar la orden.");
     }
 };
+
 
 
 module.exports = { getUserOrders, createOrder };
